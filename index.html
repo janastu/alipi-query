@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.css">
+</head>
+<body>
+  <div class="container">
+    <h4> All Feeds </h4>
+    <div id="feeds"></div>
+    <hr>
+    <div class="query">
+      csv of keys to filter <input id="key" type="text" placeholder="csv of keys to filter" class="search"> 
+      csv of values to filer <input id="query" type="text" placeholder="csv of values to filter" class="search"> 
+      <input type="submit" value="Search" onclick="filter();">
+    </div>
+    <hr>
+    <h4> Result </h4>
+    <div id="result-count"></div>
+    <div id="result"></div>
+  </div>
+  <style>
+    body {
+      padding: 10px;
+    }
+    #feeds, #result {
+      height: 500px;
+      overflow: scroll;
+    }
+    .query {
+      padding: 30px 0 30px 0;
+    }
+  </style>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
+  <script src="js/bootstrap.js"></script>
+  <script src="js/underscore.js"></script>
+  <script>
+    var sources = ['http://y.a11y.in/web/feed', 'http://demo.swtr.us/posts'];
+    var feeds = [], flattened = 0;
+    window.onload = function() {
+      $.ajax({
+        type: 'GET',
+        url: sources[0],
+        success: function(data) {
+          console.log(data);
+          feeds.push(_.toArray(data));
+          $('#feeds').append(JSON.stringify(data));
+        }
+      });
+      $.ajax({
+        type: 'GET',
+        url: sources[1],
+        success: function(data) {
+          console.log(data);
+          feeds.push(JSON.parse(data));
+          $('#feeds').append(data);
+        }
+      });
+    };
+    var filter = function() {
+      if(!flattened) {
+        _.each(feeds[0], function(obj) {
+          obj['author'] = obj['user'];
+        });
+        feeds = _.flatten(feeds);
+        flattened = 1;
+      }
+      var keys = $('#key').val().split(',');
+      var vals = $('#query').val().split(',');
+      var props = {};
+      for(var i in keys) {
+        props[keys[i]] = vals[i];
+      }
+      //console.log(props);
+      var result = _.where(feeds, props);
+      $('#result').html(JSON.stringify(result));
+      $('#result-count').html('<i>' + result.length + ' results found.</i><br>');
+    };
+  </script>
+</body>
+</html>
